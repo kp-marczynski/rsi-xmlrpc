@@ -4,7 +4,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.xmlrpc.WebServer;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.CliArgsParser;
+import pl.marczynki.pwr.rsi.xmlrpc_app.shared.Doc;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.InetAddress;
 import java.util.HashMap;
 
@@ -29,10 +32,12 @@ public class ServerRpc {
         }
     }
 
+    @Doc(description = "Metoda dodajaca 2 liczby", params = {"int x: pierwsza liczba", "int y: druga liczba"})
     public Integer echo(int x, int y) {
         return x + y;
     }
 
+    @Doc(description = "Przykladowa metoda asynchroniczna", params = {"int sleepTime: wyznacznik jak dlugo watek ma byc wstrzymany"})
     public int execAsy(int sleepTime) {
         System.out.println("... wywolano asy - odliczam " + sleepTime);
         try {
@@ -43,6 +48,28 @@ public class ServerRpc {
         }
         System.out.println("... asy - koniec odliczania");
         return (123);
+    }
+
+    public String show() {
+        StringBuilder result = new StringBuilder();
+        result.append("***** Dostepne metody *****");
+        Method[] declaredMethods = ServerRpc.class.getDeclaredMethods();
+        for (Method method : declaredMethods) {
+            Doc annotation = method.getAnnotation(Doc.class);
+            if (Modifier.isPublic(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && annotation != null) {
+                result.append("\n")
+                        .append(method.getName())
+                        .append("\n\t").append("Opis:")
+                        .append("\n\t\t").append(annotation.description());
+                if (annotation.params().length > 0) {
+                    result.append("\n\t").append("Parametry:");
+                }
+                for (String param : annotation.params()) {
+                    result.append("\n\t\t").append(param);
+                }
+            }
+        }
+        return result.toString();
     }
 
     private static HashMap<String, String[]> getCliParams(String[] args) {

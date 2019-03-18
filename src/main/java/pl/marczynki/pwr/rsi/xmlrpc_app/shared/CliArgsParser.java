@@ -21,7 +21,10 @@ public class CliArgsParser {
 
         HashMap<String, String[]> results = new HashMap<>();
         for (Option option : options.getOptions()) {
-            results.put(option.getLongOpt(), cmd.getOptionValues(option.getLongOpt()));
+//            String[] optionValues = cmd.getOptionValues(option.getLongOpt());
+            if (cmd.hasOption(option.getLongOpt())) {
+                results.put(option.getLongOpt(), cmd.getOptionValues(option.getLongOpt()));
+            }
         }
         return results;
     }
