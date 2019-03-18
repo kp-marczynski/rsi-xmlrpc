@@ -4,7 +4,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.xmlrpc.WebServer;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.CliArgsParser;
-import pl.marczynki.pwr.rsi.xmlrpc_app.shared.Doc;
+import pl.marczynki.pwr.rsi.xmlrpc_app.shared.MethodDefinition;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -13,8 +13,6 @@ import java.util.HashMap;
 
 public class ServerRpc {
     public static void main(String[] args) {
-//        System.out.println("server");
-//        System.out.println("hallo " + args[0]);
         HashMap<String, String[]> cliParams = getCliParams(args);
         try {
             System.out.println("Startuje serwer XML-RPC...");
@@ -32,12 +30,12 @@ public class ServerRpc {
         }
     }
 
-    @Doc(description = "Metoda dodajaca 2 liczby", params = {"int x: pierwsza liczba", "int y: druga liczba"})
+    @MethodDefinition(description = "Metoda dodajaca 2 liczby", params = {"int x: pierwsza liczba", "int y: druga liczba"})
     public Integer echo(int x, int y) {
         return x + y;
     }
 
-    @Doc(description = "Przykladowa metoda asynchroniczna", params = {"int sleepTime: wyznacznik jak dlugo watek ma byc wstrzymany"})
+    @MethodDefinition(description = "Przykladowa metoda asynchroniczna", params = {"int sleepTime: wyznacznik jak dlugo watek ma byc wstrzymany"})
     public int execAsy(int sleepTime) {
         System.out.println("... wywolano asy - odliczam " + sleepTime);
         try {
@@ -55,7 +53,7 @@ public class ServerRpc {
         result.append("***** Dostepne metody *****");
         Method[] declaredMethods = ServerRpc.class.getDeclaredMethods();
         for (Method method : declaredMethods) {
-            Doc annotation = method.getAnnotation(Doc.class);
+            MethodDefinition annotation = method.getAnnotation(MethodDefinition.class);
             if (Modifier.isPublic(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && annotation != null) {
                 result.append("\n")
                         .append(method.getName())

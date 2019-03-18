@@ -13,8 +13,6 @@ public class ClientRpc {
         HashMap<String, String[]> cliParams = getCliParams(args);
         try {
             String host = "http://" + cliParams.get("ip")[0] + ":" + cliParams.get("port")[0];
-//            System.out.println(host);
-//            int serverPort = 10000;
             String selectedMethod;
             Vector<Object> params = new Vector<>();
 
@@ -29,24 +27,13 @@ public class ClientRpc {
             }
 
             XmlRpcClient srv = new XmlRpcClient(host);
-//            Vector<Integer> params = new Vector<>();
-//            params.addElement(13);
-//            params.addElement(21);
-//            Object result = srv.execute("MojSerwer.echo", params);
-//            int wynik = (Integer) result;
-//            System.out.println("wynik: " + wynik);
-//
-//            AsyncCallbackImpl cb = new AsyncCallbackImpl();
-//            Vector<Integer> params2 = new Vector<>();
-//            params2.addElement(3000);
-//            srv.executeAsync("MojSerwer.execAsy", params2, cb);
-//            System.out.println("Wywolano asynchronicznie");
 
             System.out.println("Wybrana metoda: " + selectedMethod);
 
             if (cliParams.containsKey("async")) {
                 AsyncCallbackImpl cb = new AsyncCallbackImpl();
                 srv.executeAsync("MojSerwer." + selectedMethod, params, cb);
+                System.out.println("Wywolano asynchronicznie");
             } else {
                 Object result = srv.execute("MojSerwer." + selectedMethod, params);
                 System.out.println("Wynik: " + result);
@@ -65,6 +52,10 @@ public class ClientRpc {
         Double doubleValue = Double.valueOf(param);
         if (doubleValue.toString().equals(param)) {
             return doubleValue;
+        }
+        boolean boolValue = param.equals("true");
+        if (Boolean.toString(boolValue).equals(param)) {
+            return boolValue;
         }
         return param;
     }
