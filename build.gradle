@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+}
+
+group 'pl.marczynski.pwr.rsi'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'xmlrpc', name: 'xmlrpc', version: '1.2-b1'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
+task runServer(type:JavaExec) {
+    main = "pl.marczynki.pwr.rsi.xmlrpc_app.server.ServerRpc"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task runClient(type:JavaExec) {
+    main = "pl.marczynki.pwr.rsi.xmlrpc_app.client.ClientRpc"
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task generateServerJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'pl.marczynki.pwr.rsi.xmlrpc_app.server.ServerRpc'
+    }
+    baseName = "serverRpc"
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+task generateClientJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'pl.marczynki.pwr.rsi.xmlrpc_app.client.ClientRpc'
+    }
+    baseName = "clientRpc"
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+task generateJars {
+    dependsOn 'clean'
+    dependsOn 'generateServerJar'
+    dependsOn 'generateClientJar'
+    tasks.findByName('generateServerJar').mustRunAfter 'clean'
+    tasks.findByName('generateClientJar').mustRunAfter 'clean'
+}
