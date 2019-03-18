@@ -45,17 +45,26 @@ public class ClientRpc {
     }
 
     private static Object tryCastParamToNumber(String param) {
-        Integer intValue = Integer.valueOf(param);
-        if (intValue.toString().equals(param)) {
-            return intValue;
+        try {
+            Integer intValue = Integer.valueOf(param);
+            if (intValue.toString().equals(param)) {
+                return intValue;
+            }
+        } catch (Exception ignored) {
         }
-        Double doubleValue = Double.valueOf(param);
-        if (doubleValue.toString().equals(param)) {
-            return doubleValue;
+        try {
+            Double doubleValue = Double.valueOf(param);
+            if (doubleValue.toString().equals(param)) {
+                return doubleValue;
+            }
+        } catch (Exception ignored) {
         }
-        boolean boolValue = param.equals("true");
-        if (Boolean.toString(boolValue).equals(param)) {
-            return boolValue;
+        try {
+            boolean boolValue = param.equals("true");
+            if (Boolean.toString(boolValue).equals(param)) {
+                return boolValue;
+            }
+        } catch (Exception ignored) {
         }
         return param;
     }

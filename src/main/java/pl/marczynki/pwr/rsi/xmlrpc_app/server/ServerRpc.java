@@ -48,6 +48,7 @@ public class ServerRpc {
         return (123);
     }
 
+    @MethodDefinition(description = "Zwraca liste dostepnych metod")
     public String show() {
         StringBuilder result = new StringBuilder();
         result.append("***** Dostepne metody *****");
@@ -68,6 +69,15 @@ public class ServerRpc {
             }
         }
         return result.toString();
+    }
+
+    @MethodDefinition(description = "Wyraza opinie o Twoim nastroju", params = {"String moodDescription: Opis Twojego nastroju", "Boolean areYouHappy: pytanie czy jestes szczesliwy"})
+    public String moodOpinion(String moodDescription, boolean areYouHappy) {
+        if (areYouHappy) {
+            return "To swietnie, ze " + moodDescription;
+        } else {
+            return "Mam nadzieje, ze wkrotce bedzie lepiej...";
+        }
     }
 
     private static HashMap<String, String[]> getCliParams(String[] args) {
