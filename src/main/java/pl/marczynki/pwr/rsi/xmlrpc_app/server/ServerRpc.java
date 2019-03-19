@@ -4,9 +4,11 @@ import org.apache.xmlrpc.WebServer;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.AppType;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.CliArgsParser;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.MethodDefinition;
+import pl.marczynki.pwr.rsi.xmlrpc_app.shared.ParamDefinition;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Random;
@@ -54,25 +56,30 @@ public class ServerRpc {
         result.append("***** Dostepne metody *****");
         Method[] declaredMethods = ServerRpc.class.getDeclaredMethods();
         for (Method method : declaredMethods) {
-            MethodDefinition annotation = method.getAnnotation(MethodDefinition.class);
-            if (Modifier.isPublic(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && annotation != null) {
+            MethodDefinition methodAnnotation = method.getAnnotation(MethodDefinition.class);
+            if (Modifier.isPublic(method.getModifiers()) && !Modifier.isStatic(method.getModifiers()) && methodAnnotation != null) {
                 result.append("\n")
                         .append(method.getName())
                         .append("\n\t").append("Opis:")
-                        .append("\n\t\t").append(annotation.description());
-                if (annotation.params().length > 0) {
+                        .append("\n\t\t").append(methodAnnotation.description());
+                Parameter[] parameters = method.getParameters();
+                if (parameters.length > 0) {
                     result.append("\n\t").append("Parametry:");
                 }
-                for (String param : annotation.params()) {
-                    result.append("\n\t\t").append(param);
+                for (Parameter parameter : parameters) {
+                    ParamDefinition parameterAnnotation = parameter.getAnnotation(ParamDefinition.class);
+                    result.append("\n\t\t")
+                            .append(parameter.getType().getSimpleName()).append(" ")
+                            .append(parameterAnnotation.name()).append(": ")
+                            .append(parameterAnnotation.description());
                 }
             }
         }
         return result.toString();
     }
 
-    @MethodDefinition(description = "Przykladowa metoda tesujaca wystapienie wyscigu", params = {"int upperBound: liczba inkrementacji"})
-    public int race(int upperBound) throws InterruptedException {
+    @MethodDefinition(description = "Przykladowa metoda tesujaca wystapienie wyscigu")
+    public int race(@ParamDefinition(name = "upperBound", description = "liczba inkrementacji") int upperBound) throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         Counter counter = new Counter();
@@ -87,8 +94,8 @@ public class ServerRpc {
         return counter.getCount();
     }
 
-    @MethodDefinition(description = "Wyraza opinie o Twoim nastroju", params = {"String moodDescription: Opis Twojego nastroju", "Boolean areYouHappy: pytanie czy jestes szczesliwy"})
-    public String moodOpinion(String moodDescription, boolean areYouHappy) {
+    @MethodDefinition(description = "Wyraza opinie o Twoim nastroju")
+    public String moodOpinion(@ParamDefinition(name = "moodDescription", description = "Opis Twojego nastroju") String moodDescription, @ParamDefinition(name = "areYouHappy", description = "Pytanie czy jestes szczesliwy") boolean areYouHappy) {
         if (areYouHappy) {
             return "To swietnie, ze " + moodDescription;
         } else {
@@ -96,18 +103,30 @@ public class ServerRpc {
         }
     }
 
-    @MethodDefinition(description = "Zwraca losowa liczbe", params = {"int lowerBound: dolna granica losowania liczby", "int upperBound: gorna granica losowania liczby"})
-    public int getRandomNumber(int lowerBound, int upperBound) {
+    @MethodDefinition(description = "Zwraca losowa liczbe")
+    public int getRandomNumber(@ParamDefinition(name = "lowerBound", description = "Dolna granica losowania liczby") int lowerBound, @ParamDefinition(name = "upperBound", description = "Gorna granica losowania liczby") int upperBound) {
         return new Random().nextInt(upperBound - lowerBound) + lowerBound;
+    }
+
+    @MethodDefinition(description = "Zaookragla liczbe")
+    public int roundDouble(@ParamDefinition(name = "doubleVal", description = "Liczba do zaokraglenia") double doubleVal) {
+        return (int) Math.round(doubleVal);
     }
 
     private static boolean validateMethodDefinitions() {
         Method[] declaredMethods = ServerRpc.class.getDeclaredMethods();
         for (Method method : declaredMethods) {
-            MethodDefinition annotation = method.getAnnotation(MethodDefinition.class);
+            MethodDefinition methodAnnotation = method.getAnnotation(MethodDefinition.class);
             if (Modifier.isPublic(method.getModifiers()) && !Modifier.isStatic(method.getModifiers())) {
-                if (annotation == null || annotation.params().length != method.getParameterCount()) {
+                if (methodAnnotation == null) {
                     return false;
+                }
+                Parameter[] parameters = method.getParameters();
+                for (Parameter parameter : parameters) {
+                    ParamDefinition parameterAnnotation = parameter.getAnnotation(ParamDefinition.class);
+                    if (parameterAnnotation == null) {
+                        return false;
+                    }
                 }
             }
         }
@@ -129,13 +148,13 @@ public class ServerRpc {
 
     /*************** default methods *****************/
 
-    @MethodDefinition(description = "Metoda dodajaca 2 liczby", params = {"int x: pierwsza liczba", "int y: druga liczba"})
-    public Integer echo(int x, int y) {
+    @MethodDefinition(description = "Metoda dodajaca 2 liczby")
+    public Integer echo(@ParamDefinition(name = "x", description = "Pierwsza liczba") int x, @ParamDefinition(name = "y", description = "Duga liczba") int y) {
         return x + y;
     }
 
-    @MethodDefinition(description = "Przykladowa metoda asynchroniczna", params = {"int sleepTime: wyznacznik jak dlugo watek ma byc wstrzymany"})
-    public int execAsync(int sleepTime) {
+    @MethodDefinition(description = "Przykladowa metoda asynchroniczna")
+    public int execAsync(@ParamDefinition(name = "sleepTime", description = "Wyznacznik jak dlugo watek ma byc wstrzymany") int sleepTime) {
         System.out.println("... wywolano asy - odliczam " + sleepTime);
         try {
             Thread.sleep(sleepTime);
