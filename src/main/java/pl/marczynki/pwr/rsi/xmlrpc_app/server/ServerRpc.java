@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class ServerRpc {
     public static void main(String[] args) {
         if (!validateMethodDefinitions()) {
-            throw new IllegalStateException("All server non-static public methods must be annotated with @MethodDefinition and must have documented correct number of params");
+            throw new IllegalStateException("All server non-static public methods must be annotated with @MethodDefinition  and it's params with @ParamDefinition");
         }
 
         HashMap<String, Object[]> cliParams = CliArgsParser.getAppOption(args, AppType.SERVER);
