@@ -1,27 +1,29 @@
 package pl.marczynki.pwr.rsi.xmlrpc_app.client;
 
-import org.apache.commons.cli.*;
+import org.apache.xmlrpc.AsyncCallback;
 import org.apache.xmlrpc.XmlRpcClient;
+import pl.marczynki.pwr.rsi.xmlrpc_app.shared.AppType;
 import pl.marczynki.pwr.rsi.xmlrpc_app.shared.CliArgsParser;
 
+import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Vector;
 
 public class ClientRpc {
     public static void main(String[] args) {
         System.out.println("client");
-        HashMap<String, String[]> cliParams = getCliParams(args);
+        HashMap<String, Object[]> cliParams = CliArgsParser.getAppOption(args, AppType.CLIENT);
         try {
             String host = "http://" + cliParams.get("ip")[0] + ":" + cliParams.get("port")[0];
             String selectedMethod;
+            String serverName = (String) cliParams.get("server-name")[0];
             Vector<Object> params = new Vector<>();
 
             if (cliParams.containsKey("method")) {
-                String[] cliMethod = cliParams.get("method");
-                selectedMethod = cliMethod[0];
-                for (int i = 1; i < cliMethod.length; i++) {
-                    params.add(tryCastParamToNumber(cliMethod[i]));
-                }
+                Object[] cliMethod = cliParams.get("method");
+                selectedMethod = cliMethod[0].toString();
+                params.addAll(Arrays.asList(cliMethod).subList(1, cliMethod.length));
             } else {
                 selectedMethod = "show";
             }
@@ -29,13 +31,13 @@ public class ClientRpc {
             XmlRpcClient srv = new XmlRpcClient(host);
 
             System.out.println("Wybrana metoda: " + selectedMethod);
-
+            String methodCall = serverName + "." + selectedMethod;
             if (cliParams.containsKey("async")) {
-                AsyncCallbackImpl cb = new AsyncCallbackImpl();
-                srv.executeAsync("MojSerwer." + selectedMethod, params, cb);
+                AsyncCallbackImpl callback = new AsyncCallbackImpl();
+                srv.executeAsync(methodCall, params, callback);
                 System.out.println("Wywolano asynchronicznie");
             } else {
-                Object result = srv.execute("MojSerwer." + selectedMethod, params);
+                Object result = srv.execute(methodCall, params);
                 System.out.println("Wynik: " + result);
             }
 
@@ -44,53 +46,31 @@ public class ClientRpc {
         }
     }
 
-    private static Object tryCastParamToNumber(String param) {
+    public static void minimalMain(String[] args) {
         try {
-            Integer intValue = Integer.valueOf(param);
-            if (intValue.toString().equals(param)) {
-                return intValue;
-            }
-        } catch (Exception ignored) {
+            XmlRpcClient srv = new XmlRpcClient("http://localhost:1000");
+
+            Object result = srv.execute("MojSerwer.show", new Vector());
+            System.out.println("Wynik: " + result);
+
+            Vector<Object> params = new Vector<>();
+            params.add(1000);
+            srv.executeAsync("MojSerwer.race", params, new AsyncCallback() {
+                @Override
+                public void handleResult(Object o, URL url, String s) {
+                    System.out.println("Wynik asynchronicznie: " + o);
+                }
+
+                @Override
+                public void handleError(Exception e, URL url, String s) {
+                    e.printStackTrace();
+                }
+            });
+            System.out.println("Wywolano asynchronicznie");
+        } catch (Exception exception) {
+            System.err.println("Klient XML-RPC: " + exception);
         }
-        try {
-            Double doubleValue = Double.valueOf(param);
-            if (doubleValue.toString().equals(param)) {
-                return doubleValue;
-            }
-        } catch (Exception ignored) {
-        }
-        try {
-            boolean boolValue = param.equals("true");
-            if (Boolean.toString(boolValue).equals(param)) {
-                return boolValue;
-            }
-        } catch (Exception ignored) {
-        }
-        return param;
     }
-
-    private static HashMap<String, String[]> getCliParams(String[] args) {
-        Options options = new Options();
-        Option ip = new Option("i", "ip", true, "server ip");
-        ip.setRequired(true);
-        options.addOption(ip);
-
-        Option port = new Option("p", "port", true, "server port");
-        port.setRequired(true);
-        options.addOption(port);
-
-        Option async = new Option("a", "async", false, "specifying if method should be called asynchronously");
-        async.setRequired(false);
-        options.addOption(async);
-
-        Option method = new Option("m", "method", true, "server method");
-        method.setRequired(false);
-        method.setArgs(Option.UNLIMITED_VALUES);
-        options.addOption(method);
-
-        return CliArgsParser.getAppOption(args, options);
-    }
-
 }
 
 
