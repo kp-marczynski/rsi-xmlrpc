@@ -26,7 +26,12 @@ public class CliArgsParser {
         for (Option option : options.getOptions()) {
             if (cmd.hasOption(option.getLongOpt())) {
                 String[] optionValues = cmd.getOptionValues(option.getLongOpt());
-                results.put(option.getLongOpt(), Arrays.stream(optionValues).map(CliArgsParser::tryCastParamToStandardTypes).toArray(Object[]::new));
+                if(optionValues != null ){
+                    results.put(option.getLongOpt(), Arrays.stream(optionValues).map(CliArgsParser::tryCastParamToStandardTypes).toArray(Object[]::new));
+                }
+                else{
+                    results.put(option.getLongOpt(), null);
+                }
             }
         }
         return results;

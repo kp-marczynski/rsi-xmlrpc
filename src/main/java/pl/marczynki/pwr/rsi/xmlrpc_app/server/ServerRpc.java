@@ -78,6 +78,21 @@ public class ServerRpc {
         return result.toString();
     }
 
+    @MethodDefinition(description = "Metoda powtarzajaca tekst zadana liczbe razy")
+    public int repeatText(@ParamDefinition(name="text", description = "Tekst do powtorzenia") String text, @ParamDefinition(name="numberOfRepetitions", description = "Liczba powtorzen zadanego tekstu") int numberOfRepetitions){
+        int sleepTime = 3000;
+        for (int i = 0; i < numberOfRepetitions; i++) {
+            try {
+                System.out.println(text);
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return 0;
+            }
+        }
+        return 1;
+    }
+
     @MethodDefinition(description = "Przykladowa metoda tesujaca wystapienie wyscigu")
     public int race(@ParamDefinition(name = "upperBound", description = "liczba inkrementacji") int upperBound) throws InterruptedException {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
